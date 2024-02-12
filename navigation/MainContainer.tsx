@@ -54,7 +54,8 @@ export default function MainContainer() {
             },
             tabBarStyle:{
               backgroundColor: '#EEEEEE'
-            }
+            },
+            headerShown: false 
           })}
         >
           <Tab.Screen name={homeName} component={HomeScreen} />
