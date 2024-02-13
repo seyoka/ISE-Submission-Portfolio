@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, ScrollView } from 'react-native';
 import tw from 'twrnc';
+import CustomButton from './CustomButton';
 
 export default function HomeScreen() {
   return (
@@ -30,7 +31,7 @@ export default function HomeScreen() {
             PlaceHolder
           </Text>
         </View> 
-
+  
       </View>
     </ScrollView>
   );

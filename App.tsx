@@ -2,11 +2,12 @@ import React from 'react';
 import { View, Text, ScrollView } from 'react-native';
 import HomeScreen from './navigation/HomeScreen';
 import MainContainer from './navigation/MainContainer';
+import CustomButton from './navigation/CustomButton';
 import tw from 'twrnc';
 
 function App() {
   return (
-    <MainContainer/> 
+    <MainContainer/>
   );
 };
 

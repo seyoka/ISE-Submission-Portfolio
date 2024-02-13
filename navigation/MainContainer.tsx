@@ -1,11 +1,12 @@
 import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, RouteProp } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { createStackNavigator } from '@react-navigation/stack';
 import { View, TouchableOpacity, Text } from 'react-native';
 import {  StackNavigationProp } from '@react-navigation/stack';
 import { useNavigation } from '@react-navigation/native';
+
 
 import Svg, { Path } from 'react-native-svg';
 
@@ -14,12 +15,15 @@ import ProfilePage from './ProfilePage';
 import HomeScreen from './HomeScreen';
 import SettingsScreen from './SettingsScreen';
 import DetailsScreen from './DetailsScreen';
-import CustomButton from './CustomButton'; // Your custom button component
+import CustomButton from './CustomButton'; 
+import tailwind from 'twrnc';
+
 
 // Screen names
 const homeName = 'Home';
 const detailsName = 'Details';
 const settingsName = 'Settings';
+const profileName = 'Profile';
 
 //Params becuase fearghal made me fucking use type script 
 type RootStackParamList ={
@@ -27,19 +31,18 @@ type RootStackParamList ={
   Profile: undefined; 
 }
 
-const Tab = createBottomTabNavigator();
-const Stack = createStackNavigator();
-// const navigation = useNavigation<StackNavigationProp<RootStackParamList>>()
-
-
-function HomeStack() {
-  return (
-    <Stack.Navigator>
-      <Stack.Screen name="Home" component={HomeScreen} />
-      <Stack.Screen name="Profile" component={ProfilePage} options={{ headerShown: false }} />
-    </Stack.Navigator>
-  );
+//Another param list as fearghal made me use fucking type script 
+type TabParamList={
+  Home: undefined;
+  Settings: undefined;
+  Details: undefined;
+  Profile: undefined;
 }
+
+
+const Tab = createBottomTabNavigator<TabParamList>();
+
+
 
 export default function MainContainer() {
   return (
@@ -47,20 +50,49 @@ export default function MainContainer() {
       <View style={{ flex: 1 }}>
         <Tab.Navigator 
           initialRouteName={homeName}
-          screenOptions={({ route }) => ({
+          screenOptions={({ route }:{route: RouteProp<TabParamList, keyof TabParamList> }) => ({
             tabBarIcon: ({ focused, color, size }) => {
-              const iconName = 'person-add-outline';
-              return <Ionicons name={iconName} size={size} color={color} />;
+              type IconName = 'home' | 'home-outline' | 'list' | 'list-outline' | 'albums' | 'albums-outline' | 'person' | 'person-outline'; // Add more as needed
+              let iconName: IconName | undefined; 
+
+              let rn = route.name as keyof TabParamList;
+              
+
+              if (rn === 'Home') {
+                iconName = focused
+                  ? 'home'
+                  : 'home-outline';
+              } else if (rn === 'Settings') {
+                iconName = focused 
+                ? 'list' 
+                : 'list-outline';
+              } else if (route.name === 'Details') {
+                iconName = focused 
+                ? 'albums' 
+                : 'albums-outline'; 
+              } else if (route.name === 'Profile') {
+                iconName = focused 
+                ? 'person' 
+                : 'person-outline'; 
+              }
+
+    
+              return <Ionicons name={iconName} size={size} color={color}  style={tailwind`px-8 `}/>;
             },
             tabBarStyle:{
-              backgroundColor: '#EEEEEE'
+              backgroundColor: '#EEEEEE',
+              padding: 10,
             },
-            headerShown: false 
+            headerShown: false, 
+            tabBarItemStyle:{
+              marginHorizontal: 2,
+            }
           })}
         >
           <Tab.Screen name={homeName} component={HomeScreen} />
           <Tab.Screen name={detailsName} component={DetailsScreen} />
           <Tab.Screen name={settingsName} component={SettingsScreen} />
+          <Tab.Screen name={profileName} component={ProfilePage} />
         </Tab.Navigator>
 
        
@@ -81,7 +113,6 @@ export default function MainContainer() {
             elevation: 5
         }}>
             <TouchableOpacity
-            //  onPress={()=> navigation.navigate('Profile')}
             style={{
             width: 60, // Adjust width and height of the inner circle
             height: 60,
@@ -109,3 +140,4 @@ export default function MainContainer() {
     </NavigationContainer>
   );
 }
+
