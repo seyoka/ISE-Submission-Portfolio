@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import { NavigationContainer, RouteProp } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -6,7 +6,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { View, TouchableOpacity, Text } from 'react-native';
 import {  StackNavigationProp } from '@react-navigation/stack';
 import { useNavigation } from '@react-navigation/native';
-
+import { faker } from '@faker-js/faker';
 
 import Svg, { Path } from 'react-native-svg';
 
@@ -42,8 +42,6 @@ type TabParamList={
 
 const Tab = createBottomTabNavigator<TabParamList>();
 
-
-
 export default function MainContainer() {
   return (
     <NavigationContainer>
@@ -66,11 +64,11 @@ export default function MainContainer() {
                 iconName = focused 
                 ? 'list' 
                 : 'list-outline';
-              } else if (route.name === 'Details') {
+              } else if (rn === 'Details') {
                 iconName = focused 
                 ? 'albums' 
                 : 'albums-outline'; 
-              } else if (route.name === 'Profile') {
+              } else if (rn === 'Profile') {
                 iconName = focused 
                 ? 'person' 
                 : 'person-outline'; 
@@ -120,7 +118,6 @@ export default function MainContainer() {
             backgroundColor: '#0666FB',
             justifyContent: 'center', // Center content horizontally
             alignItems: 'center', // Center content vertically
-
             }}
 
             

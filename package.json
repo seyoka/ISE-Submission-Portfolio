@@ -29,6 +29,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
+    "@faker-js/faker": "^8.4.1",
     "@types/expo__vector-icons": "^10.0.0",
     "@types/react": "~18.2.45",
     "@types/react-native": "~0.64.12",
