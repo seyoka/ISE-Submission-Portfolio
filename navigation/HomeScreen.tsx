@@ -25,33 +25,39 @@ export default function HomeScreen() {
     setRandomEmail(faker.internet.email());
   }
   
-
+ // User defintion (btw im writing all these comments and not gpt)
   interface User {
     _id: string;
     avatar: string; 
     firstName: string; 
+    lastName: string; 
     sex: SexType; 
-    ActivityCurrent: ActivityCurrent
+    ActivityCurrent: ActivityCurrent, 
   } 
 
+  // Creating a random user this was more cancerous than it looks 
   function createRandomUser(): User{
     return {
       _id: faker.string.uuid(),
       avatar: faker.image.avatar(), 
       firstName: faker.person.firstName(),
+      lastName: faker.person.lastName(),
       sex: faker.person.sexType(),
       ActivityCurrent: faker.helpers.arrayElement(['Active','Inactive', 'Out']),
-      
     };
   }
 
 
   const user = createRandomUser();
   const currentDate = new Date();
+  
+  //User details 
   const name = user.firstName; 
   const sex = user.sex
   const currentActivity = user.ActivityCurrent
-  // Explicitly typing the dateOptions object for TypeScript
+  const formattedName = `${user.firstName} ${user.lastName.charAt(0)}.`;
+  
+  // Explicitly typing the dateOptions object for TypeScript - Fearghal Desmond made me do this 
   const dateOptions: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long' };
 
   // Format the current date without the year
@@ -67,7 +73,7 @@ export default function HomeScreen() {
         {/* Teamcheck */}
         <View style={tw`w-[400px] h-[305px] top-[100px] absolute bg-neutral-50 rounded-[15px] items-center`}>
           <Text style={tw`text-center text-black text-[25px] font-normal`}>
-            {name}  {sex}  {currentActivity}
+            {formattedName}  {sex}  {currentActivity}
           </Text>
         </View> 
         
@@ -88,7 +94,7 @@ export default function HomeScreen() {
           {/* Button to generate new name and email */}
           <Button
             title="Generate New Identity"
-            onPress={generateNewIdentity}
+            onPress={createRandomUser}
           />
         </View> 
   
