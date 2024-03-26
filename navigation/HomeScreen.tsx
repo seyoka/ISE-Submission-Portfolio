@@ -1,7 +1,7 @@
 import React, {useState} from 'react';
-import { View, Text, ScrollView, Button, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, Button, StyleSheet, Image } from 'react-native';
 import tw from 'twrnc';
-import CustomButton from './CustomButton';
+
 import { faker } from '@faker-js/faker';
 import type { SexType } from '@faker-js/faker';
 import { Dimensions } from "react-native";
@@ -16,7 +16,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#E9F0F4', // Or any other background color you prefer
   },
 });
-
 
 
 
@@ -108,26 +107,41 @@ export default function HomeScreen() {
   const name = user.firstName; 
   const sex = user.sex
   const currentActivity = user.ActivityCurrent
-  const formattedName = `${user.firstName} ${user.lastName.charAt(0)}.`;
+  
   
   // Explicitly typing the dateOptions object for TypeScript - Fearghal Desmond made me do this 
   const dateOptions: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long' };
 
   // Format the current date without the year
-  const dateString = currentDate.toLocaleDateString('en-US', dateOptions);
+  const dateString = currentDate.toLocaleDateString('en-US', dateOptions); 
+
+  // Table data 
+  const tableData = Array.from({ length: 4 }, () => createRandomUser()).map(user => {
+    const formattedName = `${user.firstName} ${user.lastName.charAt(0)}.`;
+    const RandomActivity = user.RandomActivity
+    return { pfp: user.avatar, name: formattedName, time: RandomActivity };
+  });
+  
 
   return (
 <ScrollView>
       <View style={styles.container}>
 
+
         {/* Top Blue Bar */}
         <View style={tw`w-[120%] h-[80px] absolute bg-blue-600 top-0 left-[-10%]`} />
 
         {/* Teamcheck Section */}
-        <View style={tw`w-[90%] h-[305px] mx-auto top-[100px] absolute bg-neutral-50 rounded-[15px] items-center justify-center`}>
-          <View style={tw`flex-row items-center justify-between w-full px-4`}>
-            <Text style={tw`text-center text-black text-[25px] font-normal`}>{formattedName}</Text>
-          </View>
+        <View style={tw`w-[90%] h-[305px] mx-auto top-[100px] absolute bg-neutral-50 rounded-[15px] `}>
+        <Text style={tw`mx-5 mt-2 text-xl`} >Fire</Text>
+        <Text style={tw`w-36 h-6 text-center text-black text-sm font-sm font-['DM Sans'] mx-42 mt-3`}>Latest Activity</Text>
+        {tableData.map((item, index) => (
+        <View key={index} style={[tw`flex-row items-center mt-5`, { top: `${index * 50}px`, left: '6%' }]}> 
+          <Image source={{ uri: item.pfp }} style={tw`w-7 h-7 rounded-full mx-3`} />
+          <Text style={tw`text-xl text-black `}>{item.name}</Text>
+          <Text style={[tw`text-xl text-black mx-20`, {  right: '6%' }]}>{item.time}</Text>
+        </View>
+      ))}
         </View>
 
         {/* Teamcheck Extension */}
@@ -150,6 +164,7 @@ export default function HomeScreen() {
         </View>
 
       </View>
+
     </ScrollView>
   );
 };
