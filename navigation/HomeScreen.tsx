@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import { View, Text, ScrollView, Button, StyleSheet, Image } from 'react-native';
 import tw from 'twrnc';
 
@@ -63,10 +63,39 @@ const chartConfig = {
   strokeWidth: 2, // optional, default is 3
   barPercentage: 0.5,
   useShadowColorFromDataset: false,
-};
+}; 
+
 
 export default function HomeScreen() {
+  
+  const getResponse = async () => {
+    try {
+      const response = await fetch(
+        'http://100.92.70.95:27941/api/audits',
+      );
+      return await response.json()
+    } catch (error) {
+      console.error(error);
+    }
+  }; 
+  
+  useEffect(() => {
+    getResponse().then(console.log);
+  }, []); 
 
+  var ws = new WebSocket('ws://100.92.70.95:27941/gateway')
+
+  ws.onopen = () => {
+    ws.send('hello world')
+  } 
+
+  ws.onerror = (e) => { 
+    console.log(e);
+  }
+  
+  ws.onmessage = (e) => {
+    console.log(e.data)
+  }
 
   // Current activities 
   type ActivityCurrent = 'Active' | 'Inactive' | 'Out'
@@ -130,6 +159,7 @@ export default function HomeScreen() {
     return { pfp: user.avatar, name: formattedName, time: RandomActivity };
   });
   
+  
 
   return (
 <ScrollView>
@@ -169,7 +199,7 @@ export default function HomeScreen() {
             {/* Busy text-icon pair */}
             <View style={tw`items-center`}>
               <Text style={tw`text-sm text-black`}>Busy</Text>
-              <Circle color="red" />
+              <Circle  color="red" />
             </View>
 
             

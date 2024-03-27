@@ -15,7 +15,7 @@ import ProfilePage from './ProfilePage';
 import HomeScreen from './HomeScreen';
 import SettingsScreen from './SettingsScreen';
 import DetailsScreen from './DetailsScreen';
-import CustomButton from './CustomButton'; 
+
 import tailwind from 'twrnc';
 
 
