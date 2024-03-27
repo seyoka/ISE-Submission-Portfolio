@@ -17,7 +17,15 @@ const styles = StyleSheet.create({
   },
 });
 
-
+// Define a simple Circle component
+const Circle: React.FC<{ color: string }> = ({ color }) => (
+  <View style={{
+    width: 10, // Size of the circle
+    height: 10, // Size of the circle
+    borderRadius: 5, // Half the size of width/height to make it a circle
+    backgroundColor: color, // Background color of the circle
+  }} />
+);
 
 // Learned a new trick lol 
 const screenWidth = Dimensions.get("window").width;
@@ -116,7 +124,7 @@ export default function HomeScreen() {
   const dateString = currentDate.toLocaleDateString('en-US', dateOptions); 
 
   // Table data 
-  const tableData = Array.from({ length: 4 }, () => createRandomUser()).map(user => {
+  const tableData = Array.from({ length: 1 }, () => createRandomUser()).map(user => {
     const formattedName = `${user.firstName} ${user.lastName.charAt(0)}.`;
     const RandomActivity = user.RandomActivity
     return { pfp: user.avatar, name: formattedName, time: RandomActivity };
@@ -145,11 +153,34 @@ export default function HomeScreen() {
         </View>
 
         {/* Teamcheck Extension */}
-        <View style={tw`w-[90%] h-[120px] mx-auto top-[440px] absolute bg-neutral-50 rounded-[15px] items-center`}>
-          <Text style={tw`text-left text-black text-[25px] font-normal`}>
+        <View style={tw`w-[90%] h-[120px] mx-auto top-[440px] absolute bg-neutral-50 rounded-[15px]`}>
+          <Text style={tw`text-left text-black text-[25px] font-normal mx-3`}>
             {dateString}
           </Text>
+
+          {/* Horizontal container */}
+          <View style={tw`flex-row justify-around items-center mt-4`}>
+      
+            <View style={tw`items-center`}>
+              <Text style={tw`text-sm text-black`}>Active</Text>
+              <Circle color="green" />
+            </View>
+
+            {/* Busy text-icon pair */}
+            <View style={tw`items-center`}>
+              <Text style={tw`text-sm text-black`}>Busy</Text>
+              <Circle color="red" />
+            </View>
+
+            
+            <View style={tw`items-center`}>
+              <Text style={tw`text-sm text-black`}>Absent</Text>
+              <Circle color="black" />
+            </View>
+          </View>
+
         </View>
+
 
         {/* Requests */}
         <View style={tw`w-[90%] h-[305px] mx-auto top-[590px] absolute bg-neutral-50 rounded-[15px] items-center`}>
