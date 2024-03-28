@@ -67,35 +67,49 @@ const chartConfig = {
 
 
 export default function HomeScreen() {
-  
-  const getResponse = async () => {
-    try {
-      const response = await fetch(
-        'http://100.92.70.95:27941/api/audits',
-      );
-      return await response.json()
-    } catch (error) {
-      console.error(error);
-    }
-  }; 
+
+  const [userName, setUserName] = useState('');
+  const [userPfp, setUserPfp] = useState('');
+  const [accessTime, setAccessTime] = useState('');
   
   useEffect(() => {
-    getResponse().then(console.log);
-  }, []); 
+    const ws = new WebSocket('ws://100.92.70.95:27941/gateway');
 
-  var ws = new WebSocket('ws://100.92.70.95:27941/gateway')
+    ws.onerror = (e) => {
+      console.log('WebSocket error:', e);
+    };
 
-  ws.onopen = () => {
-    ws.send('hello world')
-  } 
-
-  ws.onerror = (e) => { 
-    console.log(e);
-  }
-  
-  ws.onmessage = (e) => {
-    console.log(e.data)
-  }
+    ws.onmessage = (e) => {
+      try {
+        const message = JSON.parse(e.data);
+        const userId = message.data.data.opener.user;
+        const newUserName = userId === 1 ? "Will" : `User #${userId}`;
+        const accessTimeISO = message.data.data.accessed_at;
+        const date = new Date(accessTimeISO);
+        
+        const options: Intl.DateTimeFormatOptions = {
+          hour: '2-digit', 
+          minute: '2-digit',  
+          hour12: true
+        };
+        
+        const formattedTime = new Intl.DateTimeFormat('en-US', options).format(date);
+        setUserName(newUserName);
+        setAccessTime(formattedTime);
+      } catch (error) {
+        console.error("Error parsing JSON data or extracting information:", error);
+      }
+    };
+    
+        // Clean up function
+        return () => {
+          ws.close();
+        };
+      }, []); 
+    
+      // ... the rest of your HomeScreen component
+    
+    
 
   // Current activities 
   type ActivityCurrent = 'Active' | 'Inactive' | 'Out'
@@ -171,15 +185,26 @@ export default function HomeScreen() {
 
         {/* Teamcheck Section */}
         <View style={tw`w-[90%] h-[305px] mx-auto top-[100px] absolute bg-neutral-50 rounded-[15px] `}>
-        <Text style={tw`mx-5 mt-2 text-xl`} >Fire</Text>
-        <Text style={tw`w-36 h-6 text-center text-black text-sm font-sm font-['DM Sans'] mx-42 mt-3`}>Latest Activity</Text>
-        {tableData.map((item, index) => (
-        <View key={index} style={[tw`flex-row items-center mt-5`, { top: `${index * 50}px`, left: '6%' }]}> 
-          <Image source={{ uri: item.pfp }} style={tw`w-7 h-7 rounded-full mx-3`} />
-          <Text style={tw`text-xl text-black `}>{item.name}</Text>
-          <Text style={[tw`text-xl text-black mx-20`, {  right: '6%' }]}>{item.time}</Text>
-        </View>
-      ))}
+            <Text style={tw`mx-5 mt-2 text-xl`} >Will Tracker</Text> 
+            <Text> date selector placeholder</Text>
+            <Text style={tw`w-36 h-6 text-center text-black text-sm font-sm font-['DM Sans'] mx-42 mt-3`}>Latest Activity</Text>
+            {/* {tableData.map((item, index) => (
+            <View key={index} style={[tw`flex-row items-center mt-5`, { top: `${index * 50}px`, left: '6%' }]}> 
+              <Image source={{ uri: item.pfp }} style={tw`w-7 h-7 rounded-full mx-3`} />
+              <Text style={tw`text-xl text-black `}>{item.name}</Text>
+              <Text style={[tw`text-xl text-black mx-20`, {  right: '6%' }]}>{item.time}</Text>
+            </View> */}
+          {/* ))} */}
+
+            <View style={tw`flex-row items-center mt-5`}> 
+            <Image
+                source={require('../assets/images/willy.jpeg')} // Adjust the path based on your component's location
+                style={tw`mx-3 w-10 h-10 rounded-full`} // Set the size as needed
+              />
+              <Text style={tw`text-xl text-black mx-3`}>{userName}. D</Text>
+              <Text style={[tw`text-xl text-black mx-20`, { right: '6%' }]}>{accessTime}</Text>
+
+          </View>          
         </View>
 
         {/* Teamcheck Extension */}
@@ -214,14 +239,7 @@ export default function HomeScreen() {
 
         {/* Requests */}
         <View style={tw`w-[90%] h-[305px] mx-auto top-[590px] absolute bg-neutral-50 rounded-[15px] items-center`}>
-          <BarChart
-            data={data}
-            width={380}
-            height={300}
-            yAxisLabel="$"
-            chartConfig={chartConfig}
-            verticalLabelRotation={30}
-          />
+
         </View>
 
       </View>
@@ -229,5 +247,4 @@ export default function HomeScreen() {
     </ScrollView>
   );
 };
-
 
