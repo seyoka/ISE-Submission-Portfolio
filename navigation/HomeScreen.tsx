@@ -1,10 +1,12 @@
 import React, {useEffect, useState} from 'react';
-import { View, Text, ScrollView, Button, StyleSheet, Image } from 'react-native';
+import { View, Text, ScrollView, Button, StyleSheet, Image, Modal, TouchableOpacity } from 'react-native';
 import tw from 'twrnc';
 
 import { faker } from '@faker-js/faker';
 import type { SexType } from '@faker-js/faker';
 import { Dimensions } from "react-native";
+
+import DatePicker, { getFormatedDate } from 'react-native-modern-datepicker'
 
 
 
@@ -15,6 +17,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#E9F0F4', // Or any other background color you prefer
   },
+  centeredView: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 22
+  },
+  modalView: {
+    margin: 20,
+    backgroundColor: "white",
+    borderRadius: 20,
+    width: '90%',
+    padding: 35,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5
+  }
 });
 
 // Define a simple Circle component
@@ -66,11 +90,22 @@ const chartConfig = {
 }; 
 
 
-export default function HomeScreen() {
+export default function HomeScreen() { 
+
+  const today = new Date();
+  today.setDate(today.getDate() + 1); // This modifies 'today' directly
+  const startDate = getFormatedDate(today, 'YYYY/MM/DD'); // Pass 'today' as a Date object
+  
+
+  const [dateCal, setDateCal] = useState('12/12/2023')
 
   const [userName, setUserName] = useState('');
   const [userPfp, setUserPfp] = useState('');
-  const [accessTime, setAccessTime] = useState('');
+  const [accessTime, setAccessTime] = useState(''); 
+
+
+  const [date, setDate] = useState(new Date())
+  const [open, setOpen] = useState(false)
   
   useEffect(() => {
     const ws = new WebSocket('ws://100.92.70.95:27941/gateway');
@@ -173,6 +208,15 @@ export default function HomeScreen() {
     return { pfp: user.avatar, name: formattedName, time: RandomActivity };
   });
   
+  function handleOnPress(){
+    setOpen(true)
+    console.log('button pressed')
+  } 
+
+  function handleChange(propdate: string) { 
+    setDateCal(propdate);
+  }
+  
   
 
   return (
@@ -186,7 +230,38 @@ export default function HomeScreen() {
         {/* Teamcheck Section */}
         <View style={tw`w-[90%] h-[305px] mx-auto top-[100px] absolute bg-neutral-50 rounded-[15px] `}>
             <Text style={tw`mx-5 mt-2 text-xl`} >Will Tracker</Text> 
-            <Text> date selector placeholder</Text>
+            <TouchableOpacity onPress={() => setOpen(true)}>
+        <Text style={tw`mx-7 text-slate-600`}>{dateString}</Text>
+      </TouchableOpacity>
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={open}
+        onRequestClose={() => {
+          setOpen(false);
+        }}
+      >
+        <View style={styles.centeredView}>
+          <View style={styles.modalView}>
+            
+            <DatePicker 
+            mode='calendar'
+            selected={dateCal}
+            onDateChange={handleChange}
+            maximumDate={startDate}
+            />
+
+            <TouchableOpacity
+              style={{ marginTop: 20 }}
+              onPress={() => setOpen(false)}
+            >
+              <Text>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+
             <Text style={tw`w-36 h-6 text-center text-black text-sm font-sm font-['DM Sans'] mx-42 mt-3`}>Latest Activity</Text>
             {/* {tableData.map((item, index) => (
             <View key={index} style={[tw`flex-row items-center mt-5`, { top: `${index * 50}px`, left: '6%' }]}> 
@@ -247,4 +322,3 @@ export default function HomeScreen() {
     </ScrollView>
   );
 };
-
