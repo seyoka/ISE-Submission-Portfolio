@@ -16,6 +16,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#E9F0F4', // Or any other background color you prefer
+    
   },
   centeredView: {
     flex: 1,
@@ -102,6 +103,7 @@ export default function HomeScreen() {
   const [userName, setUserName] = useState('');
   const [userPfp, setUserPfp] = useState('');
   const [accessTime, setAccessTime] = useState(''); 
+  const [readerAction, setReaderAction] = useState('')
 
 
   const [date, setDate] = useState(new Date())
@@ -109,7 +111,9 @@ export default function HomeScreen() {
   
   useEffect(() => {
     const ws = new WebSocket('ws://100.92.70.95:27941/gateway');
-
+    const audit = fetch('Https://100.92.70.95:27941/api/audits')
+    
+    console.log(audit)
     ws.onerror = (e) => {
       console.log('WebSocket error:', e);
     };
@@ -117,18 +121,29 @@ export default function HomeScreen() {
     ws.onmessage = (e) => {
       try {
         const message = JSON.parse(e.data);
+        console.log(message)
         const userId = message.data.data.opener.user;
         const newUserName = userId === 1 ? "Will" : `User #${userId}`;
         const accessTimeISO = message.data.data.accessed_at;
         const date = new Date(accessTimeISO);
-        
+        const reader = message.data.data.reader;
+        console.log(reader)
         const options: Intl.DateTimeFormatOptions = {
           hour: '2-digit', 
           minute: '2-digit',  
           hour12: true
-        };
+        }; 
+        
+        let action = '';
+        if (reader === "Reader 1") {
+          action = 'Entered Room';
+        } else if (reader === "Reader 2") {
+          action = 'Exited Room';
+        }
         
         const formattedTime = new Intl.DateTimeFormat('en-US', options).format(date);
+
+        setReaderAction(action);
         setUserName(newUserName);
         setAccessTime(formattedTime);
       } catch (error) {
@@ -231,7 +246,7 @@ export default function HomeScreen() {
         <View style={tw`w-[90%] h-[305px] mx-auto top-[100px] absolute bg-neutral-50 rounded-[15px] `}>
             <Text style={tw`mx-5 mt-2 text-xl`} >Will Tracker</Text> 
             <TouchableOpacity onPress={() => setOpen(true)}>
-        <Text style={tw`mx-7 text-slate-600`}>{dateString}</Text>
+        <Text style={tw`mx-7 text-slate-600 font-['DM Sans']`}>{dateString}</Text>
       </TouchableOpacity>
       <Modal
         animationType="slide"
@@ -262,25 +277,24 @@ export default function HomeScreen() {
       </Modal>
 
 
-            <Text style={tw`w-36 h-6 text-center text-black text-sm font-sm font-['DM Sans'] mx-42 mt-3`}>Latest Activity</Text>
-            {/* {tableData.map((item, index) => (
-            <View key={index} style={[tw`flex-row items-center mt-5`, { top: `${index * 50}px`, left: '6%' }]}> 
-              <Image source={{ uri: item.pfp }} style={tw`w-7 h-7 rounded-full mx-3`} />
-              <Text style={tw`text-xl text-black `}>{item.name}</Text>
-              <Text style={[tw`text-xl text-black mx-20`, {  right: '6%' }]}>{item.time}</Text>
-            </View> */}
-          {/* ))} */}
+      <Text style={tw`text-center text-black text-lg mt-3 `}>Latest Activity</Text>
 
-            <View style={tw`flex-row items-center mt-5`}> 
-            <Image
-                source={require('../assets/images/willy.jpeg')} // Adjust the path based on your component's location
-                style={tw`mx-3 w-10 h-10 rounded-full`} // Set the size as needed
-              />
-              <Text style={tw`text-xl text-black mx-3`}>{userName}. D</Text>
-              <Text style={[tw`text-xl text-black mx-20`, { right: '6%' }]}>{accessTime}</Text>
+        <View style={tw`flex-row items-center mt-5 justify-start`}> 
+          <Image
+            source={require('../assets/images/willy.jpeg')} // Adjust the path based on your component's location
+            style={tw`w-10 h-10 rounded-full mx-2`} // Set the size as needed
+          />
+            
+            <Circle color="#60C860" />
 
-          </View>          
+            <Text style={tw`text-xl text-black mx-2`}>{userName} D.</Text>
+            <View style={tw`mx-6 h-full border-l `} />
+            <Text style={tw`text-xl text-black`}>Entered Room</Text>
+            <Text style={tw`text-sm text-black mx-2`}>{accessTime}</Text>
+
+          </View>
         </View>
+
 
         {/* Teamcheck Extension */}
         <View style={tw`w-[90%] h-[120px] mx-auto top-[440px] absolute bg-neutral-50 rounded-[15px]`}>
