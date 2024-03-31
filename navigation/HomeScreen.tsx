@@ -8,7 +8,28 @@ import { Dimensions } from "react-native";
 
 import DatePicker, { getFormatedDate } from 'react-native-modern-datepicker'
 
+//Interfaces 
+type WebSocketMessage = webSocketGatewayMessage; 
 
+interface webSocketGatewayMessage { 
+  type: "Gateway"
+  data: WebSocketGatewayPayload 
+}
+
+type WebSocketGatewayPayload = WebSocketGatewayAccess | WebSocketOpenGateawayOpenTooLong | WebSocketGatewayFinallyClosed
+
+interface WebSocketGatewayAccess { 
+  type: "GatewayAccess"
+
+} 
+
+interface WebSocketOpenGateawayOpenTooLong { 
+  type: "GatewayOpenTooLong"
+}
+
+interface WebSocketGatewayFinallyClosed { 
+  type: "GateWayFinallyClosed"
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -144,7 +165,16 @@ export default function HomeScreen() {
 
     ws.onmessage = (e) => {
       try {
-        const message = JSON.parse(e.data);
+        const message = JSON.parse(e.data) as WebSocketMessage;
+
+        if (message.type=="Gateway"){
+          const event = message.data
+          if(event.type == 'GatewayAccess'){
+            
+          }
+        }
+
+        
         console.log(message)
         const userId = message.data.data.opener.user;
         const newUserName = userId === 1 ? "Will" : `User #${userId}`;
