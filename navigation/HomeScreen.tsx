@@ -108,12 +108,36 @@ export default function HomeScreen() {
 
   const [date, setDate] = useState(new Date())
   const [open, setOpen] = useState(false)
+
+  const [auditLogs, setAuditLogs] = useState(null);
+
   
   useEffect(() => {
     const ws = new WebSocket('ws://100.92.70.95:27941/gateway');
-    const audit = fetch('Https://100.92.70.95:27941/api/audits')
+    const audit = fetch('Https://100.92.70.95:27941/api/audits') 
+
+    fetch('https://100.92.70.95:27941/api/audits', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        // Include other headers as required, like authorization tokens
+      },
+      // mode: 'no-cors' // Uncomment if making a CORS request
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok ' + response.statusText);
+      }
+      return response.json();
+    })
+    .then(data => {
+      setAuditLogs(data); // Set the state with the fetched data
+    })
+    .catch(error => {
+      console.error('There has been a problem with your fetch operation:', error);
+    });
     
-    console.log(audit)
+
     ws.onerror = (e) => {
       console.log('WebSocket error:', e);
     };
