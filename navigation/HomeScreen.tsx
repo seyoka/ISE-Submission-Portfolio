@@ -8,8 +8,13 @@ import { Dimensions } from "react-native";
 
 import DatePicker, { getFormatedDate } from 'react-native-modern-datepicker'
 
+const systemPfp = require('../assets/images/system.jpeg')
+const willyPfp = require('../assets/images/willy.jpeg') 
+const unknownPfp = require('../assets/images/unknown.png')
+
 //Interfaces 
-type WebSocketMessage = webSocketGatewayMessage; 
+// Gateway Message 
+type AuditMessage = webSocketGatewayMessage; 
 
 interface webSocketGatewayMessage { 
   type: "Gateway"
@@ -17,9 +22,20 @@ interface webSocketGatewayMessage {
 }
 
 type WebSocketGatewayPayload = WebSocketGatewayAccess | WebSocketOpenGateawayOpenTooLong | WebSocketGatewayFinallyClosed
+type GatewayOpener = {
+  user: number 
+
+} | 'system'
 
 interface WebSocketGatewayAccess { 
   type: "GatewayAccess"
+  data: {
+    "gateway_id": string
+    "accessed_at": string
+    "opener": GatewayOpener 
+    "transact_id": string
+    "reader": string 
+  }
 
 } 
 
@@ -28,8 +44,10 @@ interface WebSocketOpenGateawayOpenTooLong {
 }
 
 interface WebSocketGatewayFinallyClosed { 
-  type: "GateWayFinallyClosed"
+  type: "GatewayFinallyClosed"
 }
+
+
 
 const styles = StyleSheet.create({
   container: {
@@ -112,7 +130,10 @@ const chartConfig = {
 }; 
 
 
+
 export default function HomeScreen() { 
+
+  const [users, setUser] = useState({} as any) 
 
   const today = new Date();
   today.setDate(today.getDate() + 1); // This modifies 'today' directly
@@ -122,7 +143,7 @@ export default function HomeScreen() {
   const [dateCal, setDateCal] = useState('12/12/2023')
 
   const [userName, setUserName] = useState('');
-  const [userPfp, setUserPfp] = useState('');
+  const [userPfp, setUserPfp] = useState(undefined);
   const [accessTime, setAccessTime] = useState(''); 
   const [readerAction, setReaderAction] = useState('')
 
@@ -130,14 +151,14 @@ export default function HomeScreen() {
   const [date, setDate] = useState(new Date())
   const [open, setOpen] = useState(false)
 
-  const [auditLogs, setAuditLogs] = useState(null);
+  const [auditLogs, setAuditLogs] = useState(undefined as AuditMessage[] | undefined);
+
 
   
   useEffect(() => {
     const ws = new WebSocket('ws://100.92.70.95:27941/gateway');
-    const audit = fetch('Https://100.92.70.95:27941/api/audits') 
 
-    fetch('https://100.92.70.95:27941/api/audits', {
+    fetch('http://100.92.70.95:27941/api/users', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -149,15 +170,47 @@ export default function HomeScreen() {
       if (!response.ok) {
         throw new Error('Network response was not ok ' + response.statusText);
       }
-      return response.json();
+      return response.json(); // Parse the JSON of the response
     })
     .then(data => {
-      setAuditLogs(data); // Set the state with the fetched data
+      let allUsers = {} as any
+      for (const user of data){
+        const userId = user.id
+        allUsers[userId as number] = user 
+        
+      }
+
+      setUser(allUsers)
     })
     .catch(error => {
       console.error('There has been a problem with your fetch operation:', error);
     });
-    
+
+
+
+    fetch('http://100.92.70.95:27941/api/audits', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        // Include other headers as required, like authorization tokens
+      },
+      // mode: 'no-cors' // Uncomment if making a CORS request
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok ' + response.statusText);
+      }
+      return response.json(); // Parse the JSON of the response
+    })
+    .then(data => {
+      const messages = data as AuditMessage[]
+
+      setAuditLogs(messages)
+    })
+    .catch(error => {
+      console.error('There has been a problem with your fetch operation:', error);
+    });
+
 
     ws.onerror = (e) => {
       console.log('WebSocket error:', e);
@@ -165,41 +218,55 @@ export default function HomeScreen() {
 
     ws.onmessage = (e) => {
       try {
-        const message = JSON.parse(e.data) as WebSocketMessage;
-
+        const message = JSON.parse(e.data) as AuditMessage;
+        setAuditLogs(al => {
+          
+          
+          return [...al!, message]
+        })
         if (message.type=="Gateway"){
           const event = message.data
           if(event.type == 'GatewayAccess'){
+            const accessEvent = event.data 
+            const newUserName = accessEvent.opener == "system" ? "System" : accessEvent.opener.user == 1 ? "Will D." : `User #${accessEvent.opener.user}` 
+            const accessTimeISO = accessEvent.accessed_at;
+            const date = new Date(accessTimeISO);
+            const reader = accessEvent.reader;
+            
+            const imageFileName = accessEvent.opener == "system" ? systemPfp : accessEvent.opener.user == 1 ? willyPfp : unknownPfp;
+
+            
+            const options: Intl.DateTimeFormatOptions = {
+              hour: '2-digit', 
+              minute: '2-digit',  
+              hour12: true
+            }; 
+            
+            let action = '';
+            if (reader === "Reader 1") {
+              action = 'Entered Room';
+            }else if (reader === 'System'){
+              action = "Overide open door"
+            
+            } else if (reader === "Reader 2") {
+              action = 'Exited Room';
+            }
+            
+            const formattedTime = new Intl.DateTimeFormat('en-US', options).format(date);
+    
+            setReaderAction(action);
+            setUserName(newUserName);
+            setAccessTime(formattedTime);
+            setUserName(newUserName);
+            setUserPfp(imageFileName)
             
           }
         }
 
         
         console.log(message)
-        const userId = message.data.data.opener.user;
-        const newUserName = userId === 1 ? "Will" : `User #${userId}`;
-        const accessTimeISO = message.data.data.accessed_at;
-        const date = new Date(accessTimeISO);
-        const reader = message.data.data.reader;
-        console.log(reader)
-        const options: Intl.DateTimeFormatOptions = {
-          hour: '2-digit', 
-          minute: '2-digit',  
-          hour12: true
-        }; 
-        
-        let action = '';
-        if (reader === "Reader 1") {
-          action = 'Entered Room';
-        } else if (reader === "Reader 2") {
-          action = 'Exited Room';
-        }
-        
-        const formattedTime = new Intl.DateTimeFormat('en-US', options).format(date);
 
-        setReaderAction(action);
-        setUserName(newUserName);
-        setAccessTime(formattedTime);
+
       } catch (error) {
         console.error("Error parsing JSON data or extracting information:", error);
       }
@@ -335,15 +402,15 @@ export default function HomeScreen() {
 
         <View style={tw`flex-row items-center mt-5 justify-start`}> 
           <Image
-            source={require('../assets/images/willy.jpeg')} // Adjust the path based on your component's location
+            source={userPfp!} // Adjust the path based on your component's location
             style={tw`w-10 h-10 rounded-full mx-2`} // Set the size as needed
           />
             
             <Circle color="#60C860" />
 
-            <Text style={tw`text-xl text-black mx-2`}>{userName} D.</Text>
+            <Text style={tw`text-xl text-black mx-2`}>{userName}</Text>
             <View style={tw`mx-6 h-full border-l `} />
-            <Text style={tw`text-xl text-black`}>Entered Room</Text>
+            <Text style={tw`text-xl text-black`}>{readerAction}</Text>
             <Text style={tw`text-sm text-black mx-2`}>{accessTime}</Text>
 
           </View>
@@ -382,11 +449,46 @@ export default function HomeScreen() {
 
         {/* Requests */}
         <View style={tw`w-[90%] h-[305px] mx-auto top-[590px] absolute bg-neutral-50 rounded-[15px] items-center`}>
+          {auditLogs?auditLogs.reverse().map(
+            al => {
+              if (al.type == 'Gateway'){
+                const payload = al.data
+                if(payload.type == 'GatewayAccess'){
+                  if (payload.data.opener == 'system'){
+                    return <></>
+                  }else{
+                    const userId = payload.data.opener.user 
+                    const userInfo = users[userId] 
+                    const options: Intl.DateTimeFormatOptions = {
+                      hour: '2-digit', 
+                      minute: '2-digit',  
+                      hour12: true
+                    }; 
+                    const accessTimeISO = payload.data.accessed_at;
+                    const date = new Date(accessTimeISO);
+                    const formattedTime = new Intl.DateTimeFormat('en-US', options).format(date);
+                    
 
+                  if (payload.data.reader == "Reader 1"){
+                    return <Text>{userInfo.first_name} Entered Room {date.toDateString()} {formattedTime}</Text>
+                  }else{
+                    return <Text>{userInfo.first_name} Exited room {date.toDateString()} {formattedTime}</Text>
+                  }
+                  
+                  } 
+                                
+                }else{
+                  return <></>
+                  
+                }
+              }else{
+                return <></>
+                
+              }
+            }
+          ) : (<Text>No Audits</Text>)}
         </View>
-
       </View>
-
     </ScrollView>
   );
 };

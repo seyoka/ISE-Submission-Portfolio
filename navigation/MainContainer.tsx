@@ -50,7 +50,7 @@ export default function MainContainer() {
           initialRouteName={homeName}
           screenOptions={({ route }:{route: RouteProp<TabParamList, keyof TabParamList> }) => ({
             tabBarIcon: ({ focused, color, size }) => {
-              type IconName = 'home' | 'home-outline' | 'list' | 'list-outline' | 'albums' | 'albums-outline' | 'person' | 'person-outline'; // Add more as needed
+              type IconName = 'home' | 'home-outline' | 'list' | 'list-outline' | 'albums' | 'albums-outline' | 'person' | 'person-outline'; 
               let iconName: IconName | undefined; 
 
               let rn = route.name as keyof TabParamList;
