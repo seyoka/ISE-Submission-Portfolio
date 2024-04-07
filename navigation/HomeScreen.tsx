@@ -1,6 +1,7 @@
 import React, {useEffect, useState} from 'react';
-import { View, Text, ScrollView, Button, StyleSheet, Image, Modal, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, Button, StyleSheet, Image, Modal, TouchableOpacity, FlatList } from 'react-native';
 import tw from 'twrnc';
+import { Picker } from '@react-native-picker/picker';
 
 import { faker } from '@faker-js/faker';
 import type { SexType } from '@faker-js/faker';
@@ -15,6 +16,7 @@ const unknownPfp = require('../assets/images/unknown.png')
 //Interfaces 
 // Gateway Message 
 type AuditMessage = webSocketGatewayMessage; 
+
 
 interface webSocketGatewayMessage { 
   type: "Gateway"
@@ -46,6 +48,23 @@ interface WebSocketOpenGateawayOpenTooLong {
 interface WebSocketGatewayFinallyClosed { 
   type: "GatewayFinallyClosed"
 }
+interface User {
+  created_at: string;
+  email: string;
+  first_name: string;
+  id: number;
+  is_guest: boolean;
+  owning_group: number;
+  phone: string | null;
+  second_name: string;
+  updated_at: string;
+} 
+
+interface SimpleUser {
+  id: number;
+  name: string;
+}
+
 
 
 
@@ -105,6 +124,7 @@ import {
   ContributionGraph,
   StackedBarChart
 } from "react-native-chart-kit";
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 
 // Chart data for testing 
@@ -127,13 +147,23 @@ const chartConfig = {
   strokeWidth: 2, // optional, default is 3
   barPercentage: 0.5,
   useShadowColorFromDataset: false,
-}; 
+};  
+
+
 
 
 
 export default function HomeScreen() { 
 
-  const [users, setUser] = useState({} as any) 
+  const [users, setUsers] = useState<Record<number, User>>({});
+  const [simpleUsers, setSimpleUsers] = useState<SimpleUser[]>([]);
+
+
+
+  const [usersActivities, setUsersActivities] = useState([]); 
+
+  const [selectedUserId, setSelectedUserId] = useState<number | undefined>();
+
 
   const today = new Date();
   today.setDate(today.getDate() + 1); // This modifies 'today' directly
@@ -153,38 +183,88 @@ export default function HomeScreen() {
 
   const [auditLogs, setAuditLogs] = useState(undefined as AuditMessage[] | undefined);
 
+  const fetchUsers = async () => {
+    try {
+      const response = await fetch('http://100.92.70.95:27941/api/users', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+  
+      if (!response.ok) {
+        throw new Error(`Network response was not ok: ${response.statusText}`);
+      }
+  
+      const usersArray: User[] = await response.json(); 
+      const fetchedUsers: User[] = await response.json(); // Full user objects from your API
 
+      const transformedUsers: SimpleUser[] = fetchedUsers.map(user => ({
+        id: user.id,
+        name: user.first_name
+      }));
+
+
+      console.log(transformedUsers)
+    
+      setSimpleUsers(transformedUsers);
+      
+      
+    } catch (error) {
+      console.error('There has been a problem with your fetch operation:', error);
+    }
+  }
+  
+
+  
+  
   
   useEffect(() => {
     const ws = new WebSocket('ws://100.92.70.95:27941/gateway');
-
-    fetch('http://100.92.70.95:27941/api/users', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        // Include other headers as required, like authorization tokens
-      },
-      // mode: 'no-cors' // Uncomment if making a CORS request
-    })
-    .then(response => {
-      if (!response.ok) {
-        throw new Error('Network response was not ok ' + response.statusText);
+    const fetchAndProcessUsers = async () => {
+      try {
+        // Fetch users from the API
+        const response = await fetch('http://100.92.70.95:27941/api/users', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+    
+        // Check if the response is OK
+        if (!response.ok) {
+          throw new Error(`Network response was not ok: ${response.statusText}`);
+        }
+    
+        // Parse the JSON of the response
+        const usersArray: User[] = await response.json(); 
+    
+        // Transform users into a simpler format
+        const transformedUsers: SimpleUser[] = usersArray.map(user => ({
+          id: user.id,
+          name: user.first_name
+        }));
+    
+        // Log and set the transformed users
+        console.log(transformedUsers);
+        setSimpleUsers(transformedUsers);
+    
+        // Create a record (object) of all users
+        let allUsers: Record<number, User> = {};
+        for (const user of usersArray) {
+          allUsers[user.id] = user;
+        }
+        // Set the users record
+        setUsers(allUsers);
+    
+      } catch (error) {
+        console.error('There has been a problem with your fetch operation:', error);
       }
-      return response.json(); // Parse the JSON of the response
-    })
-    .then(data => {
-      let allUsers = {} as any
-      for (const user of data){
-        const userId = user.id
-        allUsers[userId as number] = user 
-        
-      }
-
-      setUser(allUsers)
-    })
-    .catch(error => {
-      console.error('There has been a problem with your fetch operation:', error);
-    });
+    };
+    
+    // Call the function to fetch and process users
+    fetchAndProcessUsers();
+    
 
 
 
@@ -264,7 +344,7 @@ export default function HomeScreen() {
         }
 
         
-        console.log(message)
+        
 
 
       } catch (error) {
@@ -297,38 +377,38 @@ export default function HomeScreen() {
     setRandomEmail(faker.internet.email());
   }
   
- // User defintion (btw im writing all these comments and not gpt)
-  interface User {
-    _id: string;
-    avatar: string; 
-    firstName: string; 
-    lastName: string; 
-    sex: SexType; 
-    ActivityCurrent: ActivityCurrent, 
-    RandomActivity: RandomActivity, 
-  } 
+//   User defintion (btw im writing all these comments and not gpt)
+//   interface Userf {
+//     _id: string;
+//     avatar: string; 
+//     firstName: string; 
+//     lastName: string; 
+//     sex: SexType; 
+//     ActivityCurrent: ActivityCurrent, 
+//     RandomActivity: RandomActivity, 
+//   } 
 
-  // Creating a random user this was more cancerous than it looks 
-  function createRandomUser(): User{
-    return {
-      _id: faker.string.uuid(),
-      avatar: faker.image.avatar(), 
-      firstName: faker.person.firstName(),
-      lastName: faker.person.lastName(),
-      sex: faker.person.sexType(),
-      ActivityCurrent: faker.helpers.arrayElement(['Active','Inactive', 'Out']),
-      RandomActivity: faker.helpers.arrayElement(['Back Door' , 'Front Door' , 'Side Enterance' , 'Shutter'])
-    };
-  }
+//   // Creating a random user this was more cancerous than it looks 
+//   function createRandomUser(): User{
+//     return {
+//       _id: faker.string.uuid(),
+//       avatar: faker.image.avatar(), 
+//       firstName: faker.person.firstName(),
+//       lastName: faker.person.lastName(),
+//       sex: faker.person.sexType(),
+//       ActivityCurrent: faker.helpers.arrayElement(['Active','Inactive', 'Out']),
+//       RandomActivity: faker.helpers.arrayElement(['Back Door' , 'Front Door' , 'Side Enterance' , 'Shutter'])
+//     };
+//   }
 
-  // User and Date creation 
-  const user = createRandomUser();
+//   // User and Date creation 
+//   const user = createRandomUser();
   const currentDate = new Date();
   
-  // User details 
-  const name = user.firstName; 
-  const sex = user.sex
-  const currentActivity = user.ActivityCurrent
+//   // User details 
+//   const name = user.firstName; 
+//   const sex = user.sex
+//   const currentActivity = user.ActivityCurrent
   
   
   // Explicitly typing the dateOptions object for TypeScript - Fearghal Desmond made me do this 
@@ -337,12 +417,12 @@ export default function HomeScreen() {
   // Format the current date without the year
   const dateString = currentDate.toLocaleDateString('en-US', dateOptions); 
 
-  // Table data 
-  const tableData = Array.from({ length: 1 }, () => createRandomUser()).map(user => {
-    const formattedName = `${user.firstName} ${user.lastName.charAt(0)}.`;
-    const RandomActivity = user.RandomActivity
-    return { pfp: user.avatar, name: formattedName, time: RandomActivity };
-  });
+//   // Table data 
+//   const tableData = Array.from({ length: 1 }, () => createRandomUser()).map(user => {
+//     const formattedName = `${user.firstName} ${user.lastName.charAt(0)}.`;
+//     const RandomActivity = user.RandomActivity
+//     return { pfp: user.avatar, name: formattedName, time: RandomActivity };
+//   });
   
   function handleOnPress(){
     setOpen(true)
@@ -352,10 +432,40 @@ export default function HomeScreen() {
   function handleChange(propdate: string) { 
     setDateCal(propdate);
   }
+
+
   
+  const processedLogs = auditLogs ? auditLogs.reduce<{ id: string, text: string }[]>((acc, al) => {
+    if (al.type === 'Gateway' && al.data.type === 'GatewayAccess') { 
+
+      const payload = al.data;
+      if (payload.data.opener !== 'system') {
+        const userId = payload.data.opener.user;
+        const userInfo = users[userId]; 
+
+        const accessTimeISO = payload.data.accessed_at;
+        const date = new Date(accessTimeISO);
   
+        const options: Intl.DateTimeFormatOptions = {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true
+        };
+        
+        const formattedTime = new Intl.DateTimeFormat('en-US', options).format(date);
+        const action = payload.data.reader === "Reader 1" ? "Entered Room" : "Exited room";
+  
+        acc.push({
+          id: payload.data.transact_id,
+          text: `${userInfo.first_name} ${action} ${date.toDateString()} ${formattedTime}`
+        });
+      }
+    }
+    return acc;
+  }, []) : [];
 
   return (
+
 <ScrollView>
       <View style={styles.container}>
 
@@ -396,6 +506,20 @@ export default function HomeScreen() {
           </View>
         </View>
       </Modal>
+      <Picker
+      selectedValue={selectedUserId}
+      onValueChange={(itemValue, itemIndex) => setSelectedUserId(itemValue)}
+      style={{ height: 50, width: 150 }} // Ensure the picker is visible
+    >
+      {simpleUsers.length > 0 ? (
+        simpleUsers.map((user) => (
+          <Picker.Item key={user.id} label={user.name} value={user.id} />
+        ))
+      ) : (
+        <Picker.Item label="No users available" value="none" /> // Default item when no users are available
+      )}
+    </Picker>
+
 
 
       <Text style={tw`text-center text-black text-lg mt-3 `}>Latest Activity</Text>
@@ -449,46 +573,18 @@ export default function HomeScreen() {
 
         {/* Requests */}
         <View style={tw`w-[90%] h-[305px] mx-auto top-[590px] absolute bg-neutral-50 rounded-[15px] items-center`}>
-          {auditLogs?auditLogs.reverse().map(
-            al => {
-              if (al.type == 'Gateway'){
-                const payload = al.data
-                if(payload.type == 'GatewayAccess'){
-                  if (payload.data.opener == 'system'){
-                    return <></>
-                  }else{
-                    const userId = payload.data.opener.user 
-                    const userInfo = users[userId] 
-                    const options: Intl.DateTimeFormatOptions = {
-                      hour: '2-digit', 
-                      minute: '2-digit',  
-                      hour12: true
-                    }; 
-                    const accessTimeISO = payload.data.accessed_at;
-                    const date = new Date(accessTimeISO);
-                    const formattedTime = new Intl.DateTimeFormat('en-US', options).format(date);
-                    
-
-                  if (payload.data.reader == "Reader 1"){
-                    return <Text>{userInfo.first_name} Entered Room {date.toDateString()} {formattedTime}</Text>
-                  }else{
-                    return <Text>{userInfo.first_name} Exited room {date.toDateString()} {formattedTime}</Text>
-                  }
-                  
-                  } 
-                                
-                }else{
-                  return <></>
-                  
-                }
-              }else{
-                return <></>
-                
-              }
-            }
-          ) : (<Text>No Audits</Text>)}
+        <FlatList
+        data={processedLogs.reverse()} 
+        keyExtractor={item => item.id}
+        renderItem={({ item }) => (
+        <View>
+          <Text>{item.text}</Text>
+        </View>
+    )}
+  />
         </View>
       </View>
     </ScrollView>
+
   );
 };
