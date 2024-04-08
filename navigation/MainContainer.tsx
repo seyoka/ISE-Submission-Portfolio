@@ -8,6 +8,7 @@ import {  StackNavigationProp } from '@react-navigation/stack';
 import { useNavigation } from '@react-navigation/native';
 import { faker } from '@faker-js/faker';
 
+
 import Svg, { Path } from 'react-native-svg';
 
 // Screens

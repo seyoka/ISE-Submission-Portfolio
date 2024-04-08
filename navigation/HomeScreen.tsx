@@ -8,6 +8,10 @@ import type { SexType } from '@faker-js/faker';
 import { Dimensions } from "react-native";
 
 import DatePicker, { getFormatedDate } from 'react-native-modern-datepicker'
+import SectionedMultiSelect from 'react-native-sectioned-multi-select';
+
+import { MaterialIcons } from '@expo/vector-icons'; 
+
 
 const systemPfp = require('../assets/images/system.jpeg')
 const willyPfp = require('../assets/images/willy.jpeg') 
@@ -149,11 +153,23 @@ const chartConfig = {
   useShadowColorFromDataset: false,
 };  
 
+interface CustomIconProps {
+  name: keyof typeof MaterialIcons.glyphMap;
+  size?: number;
+  color?: string;
+}
 
-
+// Define CustomIcon as a functional component
+const CustomIcon: React.FC<CustomIconProps> = ({ name, size = 24, color = 'black' }) => (
+  <MaterialIcons name={name} size={size} color={color} />
+);
 
 
 export default function HomeScreen() { 
+
+ 
+  const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  console.log('Selected:', selectedItems);
 
   const [users, setUsers] = useState<Record<number, User>>({});
   const [simpleUsers, setSimpleUsers] = useState<SimpleUser[]>([]);
@@ -220,6 +236,10 @@ export default function HomeScreen() {
   
   
   useEffect(() => {
+
+
+  
+
     const ws = new WebSocket('ws://100.92.70.95:27941/gateway');
     const fetchAndProcessUsers = async () => {
       try {
@@ -262,7 +282,6 @@ export default function HomeScreen() {
       }
     };
     
-    // Call the function to fetch and process users
     fetchAndProcessUsers();
     
 
@@ -464,6 +483,20 @@ export default function HomeScreen() {
     return acc;
   }, []) : [];
 
+  const items = [
+
+    {  
+      name: "Users", // Section name
+      id: 0, // A unique id for the section
+      children: simpleUsers.map(user => ({
+        name: user.name, // Display name for the item
+        id: user.id, // Unique key for the item
+      })),
+    },
+  ];
+
+
+
   return (
 
 <ScrollView>
@@ -506,20 +539,18 @@ export default function HomeScreen() {
           </View>
         </View>
       </Modal>
-      <Picker
-      selectedValue={selectedUserId}
-      onValueChange={(itemValue, itemIndex) => setSelectedUserId(itemValue)}
-      style={{ height: 50, width: 150 }} // Ensure the picker is visible
-    >
-      {simpleUsers.length > 0 ? (
-        simpleUsers.map((user) => (
-          <Picker.Item key={user.id} label={user.name} value={user.id} />
-        ))
-      ) : (
-        <Picker.Item label="No users available" value="none" /> // Default item when no users are available
-      )}
-    </Picker>
 
+      <SectionedMultiSelect
+        items={items}
+        IconRenderer={CustomIcon}
+        uniqueKey="id"
+        subKey="children" // Use if your items are nested within sections
+        selectText="Select users"
+        onSelectedItemsChange={setSelectedItems}
+        selectedItems={selectedItems}
+        showDropDowns={true} // Allows showing/hiding of dropdown sections
+        readOnlyHeadings={true} // Makes section headings non-interactive if true
+      />
 
 
       <Text style={tw`text-center text-black text-lg mt-3 `}>Latest Activity</Text>
@@ -530,10 +561,10 @@ export default function HomeScreen() {
             style={tw`w-10 h-10 rounded-full mx-2`} // Set the size as needed
           />
             
-            <Circle color="#60C860" />
+            {/* <Circle color="#60C860" /> */}
 
             <Text style={tw`text-xl text-black mx-2`}>{userName}</Text>
-            <View style={tw`mx-6 h-full border-l `} />
+            {/* <View style={tw`mx-6 h-full border-l `} /> */}
             <Text style={tw`text-xl text-black`}>{readerAction}</Text>
             <Text style={tw`text-sm text-black mx-2`}>{accessTime}</Text>
 
