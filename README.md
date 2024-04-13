@@ -59,5 +59,5 @@ openssl req -new -key apple_privkey.pem -out apple_cert.csr
 
 After using these commands, you are able to use `apple_cert.csr` in order to generate certificates in the apple developer portal.
 
-**I was on the only one on my team with a MAC to general CSR certs so this entire task was directed to me. Thers very little documentation for this stuff online its mostly guess work**
+**I was on the only one on my team with a MAC to generate CSR certs so this entire task was directed to me. Theres very little documentation for this stuff online its mostly guess work**
 
