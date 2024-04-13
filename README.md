@@ -1,7 +1,10 @@
 # ISE-Submission-Portfolio
  This is my immerisive software engineering college portfolio submission
  I hope this can better explain my code and things i was not able to address in the application
- Theres more information about this code on my personal site 
+ This README explains: 
+ - Dependencies
+ - How to issue an apple pass
+ - 
 
 # Induct Mobile App - Package Dependencies
 
@@ -29,6 +32,34 @@
 - react-native-reanimated: ~3.3.0
 - react-native-safe-area-context: 4.6.3
 - react-native-screens: ~3.
+- react-native-sectioned-multi-select: ^0.10.0
+- react-native-svg: 13.9.0
+- react-native-svg-transformer: ^1.3.0
+- react-native-svg-uri: ^0.0.1
+- react-native-ui-datepicker: ^2.0.2
+- react-native-vector-icons: ^10.0.3
+- twrnc: ^3.6.8
+- expo-notifications: ~0.20.1
+- expo-device: ~5.4.0
+- expo-constants: ~14.4.2
+
+## Development Dependencies
+
+- @babel/core: ^7.20.0
+- @faker-js/faker: ^8.4.1
+- @types/expo__vector-icons: ^10.0.0
+- @types/react: ~18.2.45
+- @types/react-native: ~0.64.12
+- @types/react-native-modern-datepicker: ^1.0.5
+- typescript: ^5.1.3
+
+# Issueing an apple pass 
+I never got to full explain this portion in my application due to the world limit. I understand this part will not be graded as a result I still would like to explain it here and its very interesting to me. 
+
+**continuation from where I said explained in Gitub**
+Issuing apple passes is more involved,  firstly you have to be a registered apple developer. You have to register a new pass type in their developer portal using a CSR and get a pass-issuing certificate. You use that with the CSR private key and one of their in-date WDR certificates to generate a detached PKCS#7 signature of the pass manifest. Where the manifest is just a JSON document mapping file paths to their corresponding SHA1 hashes for verification purposes. The pass itself is just a .zip file containing a pass.json, manifest.json and signature as well as images, all bundled with the extension changed to .pkpass.
+
+The redemption value also takes its cryptographic public key in base64, this is just the public counterpart of the private key that is loaded onto the pass reader hardware, used to enact secure communications.
 
  
 
@@ -59,5 +90,5 @@ openssl req -new -key apple_privkey.pem -out apple_cert.csr
 
 After using these commands, you are able to use `apple_cert.csr` in order to generate certificates in the apple developer portal.
 
-**I was on the only one on my team with a MAC to generate CSR certs so this entire task was directed to me. Theres very little documentation for this stuff online its mostly guess work**
+**I was on the only one on my team with a MAC, apple prefer you with an apple device generate CSR certs so this entire task was directed to me. Theres very little documentation for this stuff online its mostly guess work**
 
